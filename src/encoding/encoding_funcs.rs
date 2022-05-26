@@ -7,7 +7,7 @@ fn find_subsequence(haystack: &[char], needle: &[char]) -> Option<usize>
 	haystack.windows(needle.len()).rposition(|window| window == needle)
 }
 
-// Vector based solution, It is on avarage 20-30% faster, and it should work with utf8 as we use iterators of <char>
+// Vector based solution, It is on avarage 20-30% faster
 // Ofcourse Graphemes would be simply better, but interview tests are no place for external libs/mods/crates.
 fn encode_alg_c_vec_proc(input_string: &str, look_ahead: usize) -> Option<Vec<EncodedChunk>>{
 
