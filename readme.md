@@ -15,3 +15,5 @@ Vector solution is faster, nn string that are smaller than 50 chars, String solu
 The best and safest solution would be using Graphemes, but as a test external libraries/modules/crates are not recommended. 
 I tried to stick to the standalone and things I wrote on the spot.
 Implementing Graphemes on the spot would have taken a lot more time than the allowed time so I did not go that route.
+
+*Forgot to adapt decode function for utf8, should be done the same but using char.len_utf8() to make sure the slices are the right size.
