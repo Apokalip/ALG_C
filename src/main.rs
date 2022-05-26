@@ -5,11 +5,12 @@ use std::fs;
 mod encoding;
 
 fn main() {
-    let test_str = fs::read_to_string("src/test_string.txt").expect("Could not read test_string");
-    let encoded = encode_alg_c(&test_str,6,0).unwrap();
+    let args: Vec<String> = env::args().collect();
+
+    let encoded = encode_alg_c(&args[1],0,0).expect("Could not encode provided string");
     println!("encoded {:?}", encoded);
-    let decoded = decode_alg_c(encoded).unwrap();
-    println!("encoded {:?}", decoded);
+    let decoded = decode_alg_c(encoded).expect("Decoding failed");
+    println!("decoded {:?}", decoded);
 }
 
 #[cfg(test)]

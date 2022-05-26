@@ -9,11 +9,10 @@ fn find_subsequence(haystack: &[char], needle: &[char]) -> Option<usize>
 
 // Vector based solution, It is on avarage 20-30% faster
 // Ofcourse Graphemes would be simply better, but interview tests are no place for external libs/mods/crates.
-fn encode_alg_c_vec_proc(input_string: &str, look_ahead: usize) -> Option<Vec<EncodedChunk>>{
+fn encode_alg_c_vec_proc(input_data: &[char], look_ahead: usize) -> Option<Vec<EncodedChunk>>{
 
     // search buffer
     let mut sbuffer: Vec<char> = vec![];
-	let input_data: Vec<char> = input_string.chars().collect();
     // result from the encoding
     let mut encoded_data: Vec<EncodedChunk> = vec![];
     // main iterator
@@ -125,7 +124,8 @@ fn encode_alg_c_proc(input_string: &str, look_ahead: usize) -> Option<Vec<Encode
 // handles thread spawns and collect results from procedure
 fn encode_alg_c_mt(input_string: &str, sbuff_len: usize, look_ahead: usize) -> Option<Vec<EncodedChunk>> {
 
-	let mut res: Vec<EncodedChunk> = vec![];
+	let input_data: Vec<char> = input_string.chars().collect();
+
 	// num of threads is going to be +1 if there is left over
 	let num_threads = input_string.len() / sbuff_len;
 	//get the left over if we could not split the string into perfect parts
@@ -134,10 +134,8 @@ fn encode_alg_c_mt(input_string: &str, sbuff_len: usize, look_ahead: usize) -> O
 	let mut thread_handles = vec![];
 
 	for i in 0..num_threads{
-		let str_chunk = input_string[i*sbuff_len .. (i+1)*sbuff_len].to_string();
        	thread_handles.push(thread::spawn(move || {
-			//encode_alg_c_proc(&str_chunk, look_ahead)
-			encode_alg_c_vec_proc(&str_chunk, look_ahead)
+			encode_alg_c_vec_proc(&input_data[i*sbuff_len .. (i+1)*sbuff_len].to_vec(), look_ahead)
         }));
 	}
 
@@ -145,16 +143,15 @@ fn encode_alg_c_mt(input_string: &str, sbuff_len: usize, look_ahead: usize) -> O
 	// to encode_alg_c_proc() which will have more calculations. The other choice is to create an extra thread, which will skip 
 	// the need for search_buffer_size to be passed. Testing showed the second case to be a little fast but neglegable;
 	if left_over_len > 0 {
-		let str_chunk = input_string[sbuff_len*num_threads..].to_string();
 		thread_handles.push(thread::spawn(move || {
-			//encode_alg_c_proc(&str_chunk, look_ahead)
-			encode_alg_c_vec_proc(&str_chunk, look_ahead)
+			encode_alg_c_vec_proc(&input_data[sbuff_len*num_threads..].to_vec(), look_ahead)
    		}));
 	}
 
 	// join all threads and collect results
 	let mt_vecs = thread_handles.into_iter().map(|h| h.join().expect("Could not join encoding thread!"));
 
+	let mut res: Vec<EncodedChunk> = vec![];
 	for v in mt_vecs{
 		res.extend(v.expect("Failed to get vector from thread"));
 	}
