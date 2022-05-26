@@ -1,7 +1,6 @@
 use std::fmt::{Debug, Result, Formatter};
 
-// struct holding the encoded tuple (offset,len,char)
-// makes it easier to implement tests
+//helper struct to make comparisons and debug easier for testing
 #[derive(Clone,Copy)]
 pub struct EncodedChunk{
     pub offset: usize,

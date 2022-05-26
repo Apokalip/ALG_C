@@ -4,12 +4,11 @@ use std::thread;
 //helper method for vec procedure
 fn find_subsequence(haystack: &[char], needle: &[char]) -> Option<usize>
 {	
-	haystack.windows(needle.len()).position(|window| window == needle)
+	haystack.windows(needle.len()).rposition(|window| window == needle)
 }
 
-// Vector based solution, It is on avarage 20-30% faster, but it handles writing offset taking the first occuring pattern
-// and not the last as the example was given in the PDF. In decoding we use &str so that does not matter for performance as we do not iterate
-// over the already decoded data but simply use the tuples to figure out the params for the slices
+// Vector based solution, It is on avarage 20-30% faster, and it should work with utf8 as we use iterators of <char>
+// Ofcourse Graphemes would be simply better, but interview tests are no place for external libs/mods/crates.
 fn encode_alg_c_vec_proc(input_string: &str, look_ahead: usize) -> Option<Vec<EncodedChunk>>{
 
     // search buffer
@@ -38,13 +37,13 @@ fn encode_alg_c_vec_proc(input_string: &str, look_ahead: usize) -> Option<Vec<En
 			// take the most limiting length for the pattern search, be it input string size or look ahead limit,
 			// as the string may not be split perfectly unless the buffersize/lookahead may not be multiples of the length
             let max_pattern_len = data_len.min(i + look_ahead);
-
 			//pattern search
+
             for pattern_it in i..(max_pattern_len - 1){
 				
                 match (find_subsequence(&sbuffer, &input_data[i..(pattern_it + 1)])){
                     Some(idx) => {
-                        longest_pattern = &input_data[i..(pattern_it+1)];
+                        longest_pattern = &input_data[i..(pattern_it + 1)];
                         sbuffer_pattern_idx = idx;
                     },
                     None => {
@@ -54,7 +53,6 @@ fn encode_alg_c_vec_proc(input_string: &str, look_ahead: usize) -> Option<Vec<En
 			}
             // fill the search buffer with the new found pattern + the last char
             sbuffer.extend(&input_data[i..i +(longest_pattern.len() + 1)]);
-            
             encoded_data.push(EncodedChunk::new(
                 i - sbuffer_pattern_idx,
                 longest_pattern.len(),
@@ -68,7 +66,7 @@ fn encode_alg_c_vec_proc(input_string: &str, look_ahead: usize) -> Option<Vec<En
     Some(encoded_data)
 }
 
-/// Single thread procedure relying on strings but cannot handle safely utf8
+/// Single thread procedure relying on strings, not face for utf8
 fn encode_alg_c_proc(input_string: &str, look_ahead: usize) -> Option<Vec<EncodedChunk>>{
 
     // search buffer
@@ -138,8 +136,8 @@ fn encode_alg_c_mt(input_string: &str, sbuff_len: usize, look_ahead: usize) -> O
 	for i in 0..num_threads{
 		let str_chunk = input_string[i*sbuff_len .. (i+1)*sbuff_len].to_string();
        	thread_handles.push(thread::spawn(move || {
-			encode_alg_c_proc(&str_chunk, look_ahead)
-			//encode_alg_c_vec_proc(&str_chunk, look_ahead)
+			//encode_alg_c_proc(&str_chunk, look_ahead)
+			encode_alg_c_vec_proc(&str_chunk, look_ahead)
         }));
 	}
 
@@ -149,8 +147,8 @@ fn encode_alg_c_mt(input_string: &str, sbuff_len: usize, look_ahead: usize) -> O
 	if left_over_len > 0 {
 		let str_chunk = input_string[sbuff_len*num_threads..].to_string();
 		thread_handles.push(thread::spawn(move || {
-			encode_alg_c_proc(&str_chunk, look_ahead)
-			//encode_alg_c_vec_proc(&str_chunk, look_ahead)
+			//encode_alg_c_proc(&str_chunk, look_ahead)
+			encode_alg_c_vec_proc(&str_chunk, look_ahead)
    		}));
 	}
 
@@ -180,27 +178,26 @@ pub fn encode_alg_c(input_string: &str, sbuff_len: usize, look_ahead: usize) -> 
 }
 
 // decoding using primaraly &str so there is no actual iteration and everything is based on the data of the EncodedChunk*s
-// The vector solution takes the pattern from the first as it is best for perfomance as reversing vectors is slow.
-// The string solution takes the closest/largest pattern to the cursor as searching for subslice is easier like in the example given.
 pub fn decode_alg_c(input_vec: Vec<EncodedChunk>) -> Option<String>{
 
     let mut res = String::new();
     
     for chunk in input_vec{
-        let mut res_len = res.len();
+        let res_len = res.len();
         
         //check for invalid encodings
         if res.len() < chunk.offset {
         	return None
         }
+		//str slice params
         let start = res_len - chunk.offset;
         let end = start + chunk.len;
+
         // create new string from string slice over res itself, so we clone only the slice and not the whole string
         res.push_str(&res[start..end].to_string());
         // push the tuple character last
         res.push(chunk.identf);
     }
-
     Some(res)
 }
 
