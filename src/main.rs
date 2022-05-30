@@ -1,6 +1,5 @@
 use std::env;
 use self::encoding::*;
-use std::fs;
 
 mod encoding;
 
