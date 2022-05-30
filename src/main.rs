@@ -57,12 +57,23 @@ mod tests {
     }
 
     #[test]
-    fn test_large_1mil_16threads(){
+    fn test_large_100k_16threads(){
         let now = time::Instant::now();
         let test_str = fs::read_to_string("src/test_string.txt").expect("Could not read test_string");
         let encoded = encode_alg_c(&test_str,test_str.len()/16,0).unwrap();
         let decoded = decode_alg_c(encoded).unwrap();
         assert_eq!(test_str, decoded);
-        println!("Testing single string of len 100k alphanumerics; sbuff_size = 1mil/cores(16) : {:?}", now.elapsed());
+        println!("Testing single string of len 100k alphanumerics; sbuff_size = 100k/cores(16) : {:?}", now.elapsed());
+    }
+
+
+    #[test]
+    fn test_large_100k_utf8_16threads(){
+        let now = time::Instant::now();
+        let test_str = fs::read_to_string("src/test_string_utf8.txt").expect("Could not read test_string");
+        let encoded = encode_alg_c(&test_str,test_str.len()/16,0).unwrap();
+        let decoded = decode_alg_c(encoded).unwrap();
+        assert_eq!(test_str, decoded);
+        println!("Testing single string of len 100k utf8; sbuff_size = 100k/cores(16) : {:?}", now.elapsed());
     }
 }
